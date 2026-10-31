@@ -27,8 +27,9 @@ probabilidad de anemia y señala a quiénes conviene priorizar.
    dato puede quedar como *No se conoce*: la red estima el riesgo con la información disponible.
 2. La red bayesiana calcula la probabilidad de anemia mediante inferencia exacta
    (eliminación de variables).
-3. La aplicación compara esa probabilidad con un umbral y clasifica el caso como **riesgo
-   elevado** o **riesgo menor**.
+3. La aplicación presenta el resultado en tres niveles de riesgo (**bajo**, **moderado** y
+   **alto**), para que sea más fácil de interpretar, e indica cuántos de cada 100 niños con un
+   resultado similar tenían anemia en los datos de prueba.
 4. Se muestra qué datos elevan o reducen el riesgo, para que el resultado sea explicable.
 
 ### Factores considerados
@@ -43,8 +44,22 @@ probabilidad de anemia y señala a quiénes conviene priorizar.
 
 - **Datos de entrenamiento:** 9 706 niños de la ENDES 2024.
 - **Datos de prueba:** 9 061 niños de la ENDES 2025, no usados en el entrenamiento.
-- **Umbral de decisión:** 33,2 %, fijado para detectar al menos al 70 % de los niños con anemia,
+- **Umbral de tamizaje:** 33,2 %, fijado para detectar al menos al 70 % de los niños con anemia,
   porque en un tamizaje es preferible una falsa alarma a dejar sin atención a un niño en riesgo.
+  Desde este umbral se recomienda priorizar la prueba de hemoglobina.
+
+### Niveles de riesgo
+
+| Nivel | Probabilidad estimada | Niños con anemia por cada 100 (ENDES 2025) |
+|---|---|---|
+| Bajo | menor a 33,2 % | 25 |
+| Moderado | 33,2 % a 45 % | 38 |
+| Alto | 45 % o más | 54 |
+
+El límite del nivel alto (45 %) se fijó con los datos de entrenamiento: por encima de él, más de
+la mitad de los niños tenía anemia en la validación cruzada de 2024.
+
+Las métricas siguientes se calculan con el umbral de tamizaje (moderado o alto frente a bajo).
 
 | Métrica | Valor |
 |---|---|
@@ -57,8 +72,8 @@ probabilidad de anemia y señala a quiénes conviene priorizar.
 
 - La red muestra asociaciones probabilísticas, no relaciones causales demostradas.
 - Su capacidad de clasificación es moderada, por lo que no sustituye la medición de hemoglobina.
-- Parte de los niños clasificados en riesgo elevado no tendrá anemia (consecuencia del umbral
-  elegido).
+- Parte de los niños clasificados en riesgo moderado o alto no tendrá anemia (consecuencia del
+  umbral elegido).
 - Se entrenó con una encuesta nacional; su desempeño puede variar en poblaciones específicas.
 
 ## Estructura del proyecto
