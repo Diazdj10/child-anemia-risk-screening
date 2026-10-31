@@ -1,0 +1,11 @@
+# Tema visual de la aplicación. Modifique estos valores para cambiar los colores y la fuente.
+[theme]
+base = "light"
+primaryColor = "#1F5C99"            # color de botones y elementos destacados
+backgroundColor = "#FFFFFF"         # fondo principal
+secondaryBackgroundColor = "#F2F5F8" # fondo de formularios y paneles
+textColor = "#1A1A1A"               # color del texto
+font = "sans serif"                 # "sans serif", "serif" o "monospace"
+
+[browser]
+gatherUsageStats = false
