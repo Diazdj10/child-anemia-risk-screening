@@ -1,8 +1,9 @@
 # Tamizaje de riesgo de anemia infantil
 
 Aplicación web que estima el riesgo de anemia en niños y niñas de 6 a 35 meses en el Perú
-mediante una **red bayesiana** entrenada con la Encuesta Demográfica y de Salud Familiar
-(ENDES) 2024 del INEI, según el criterio de anemia de la OMS 2024.
+mediante una **red bayesiana** construida con datos de la Encuesta Demográfica y de Salud
+Familiar (ENDES) 2024 y 2025 del INEI (entrenamiento con 2024 y validación con 2025), según el
+criterio de anemia de la OMS 2024.
 
 > La herramienta **no diagnostica** la anemia ni reemplaza la medición de hemoglobina. Su
 > propósito es ayudar a priorizar a los niños que requieren con mayor urgencia la prueba de
