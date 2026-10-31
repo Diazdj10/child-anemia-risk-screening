@@ -9,6 +9,11 @@ from inferencia import FACTORES, GRUPOS, NOMBRES, aportes, cargar_modelo, probab
 
 DESCONOCIDO = "No se conoce"
 UMBRAL_APORTE = 0.015  # cambios menores a 1,5 puntos porcentuales se consideran mínimos
+# Nivel alto: probabilidad desde la cual más de la mitad de los niños tenía anemia en la
+# validación cruzada de 2024 (55,3 %). El umbral de tamizaje (moderado) viene del modelo.
+UMBRAL_ALTO = 0.45
+# Niños con anemia por cada 100 en cada nivel, en los datos de prueba (ENDES 2025)
+ANEMIA_POR_NIVEL = {"Bajo": 25, "Moderado": 38, "Alto": 54}
 
 st.set_page_config(page_title="Tamizaje de riesgo de anemia infantil", page_icon="🩺",
                    layout="wide")
@@ -61,24 +66,31 @@ with pestana_eval:
 
     if enviado:
         p = probabilidad(inferencia, respuestas)
-        elevado = p >= UMBRAL
+        nivel = "Alto" if p >= UMBRAL_ALTO else ("Moderado" if p >= UMBRAL else "Bajo")
         st.divider()
         st.subheader("Resultado")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Probabilidad estimada de anemia", pct(p),
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Nivel de riesgo", nivel)
+        c2.metric("Probabilidad estimada de anemia", pct(p),
                   delta=f"{100 * (p - PREVALENCIA):+.1f} pp frente al promedio".replace(".", ","),
                   delta_color="inverse")
-        c2.metric("Promedio en niños de 6 a 35 meses", pct(PREVALENCIA))
-        c3.metric("Datos ingresados", f"{len(respuestas)} de {len(FACTORES)}")
+        c3.metric("Promedio en niños de 6 a 35 meses", pct(PREVALENCIA))
+        c4.metric("Datos ingresados", f"{len(respuestas)} de {len(FACTORES)}")
 
-        if elevado:
-            st.warning(f"**Riesgo elevado** (probabilidad igual o mayor que {pct(UMBRAL)}). "
-                       "Se recomienda priorizar la medición de hemoglobina y el seguimiento "
-                       "del niño o niña en su establecimiento de salud.", icon="⚠️")
+        referencia = (f"De cada 100 niños con un resultado similar en los datos de prueba, "
+                      f"{ANEMIA_POR_NIVEL[nivel]} tenían anemia.")
+        if nivel == "Alto":
+            st.error(f"**Riesgo alto** (probabilidad de {pct(UMBRAL_ALTO)} o más). {referencia} "
+                     "Se recomienda realizar la medición de hemoglobina con prioridad y asegurar "
+                     "el seguimiento del niño o niña en su establecimiento de salud.", icon="🔴")
+        elif nivel == "Moderado":
+            st.warning(f"**Riesgo moderado** (probabilidad entre {pct(UMBRAL)} y "
+                       f"{pct(UMBRAL_ALTO)}). {referencia} Se recomienda priorizar la medición "
+                       "de hemoglobina en su próximo control.", icon="🟠")
         else:
-            st.success(f"**Riesgo menor** (probabilidad inferior a {pct(UMBRAL)}). "
-                       "Aun así, debe mantenerse el control de crecimiento y desarrollo y la "
-                       "medición de hemoglobina según la norma técnica vigente.", icon="✅")
+            st.success(f"**Riesgo bajo** (probabilidad inferior a {pct(UMBRAL)}). {referencia} "
+                       "Debe mantenerse el control de crecimiento y desarrollo y la medición de "
+                       "hemoglobina según la norma técnica vigente.", icon="🟢")
 
         if respuestas:
             st.markdown("#### ¿Qué datos influyen en este resultado?")
@@ -143,18 +155,27 @@ with pestana_modelo:
     st.markdown(f"Evaluado con {n_prueba} niños de 2025, que no se usaron en el entrenamiento.")
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Sensibilidad", pct(metricas["sensibilidad"]),
-              help="Proporción de niños con anemia que la red clasifica en riesgo elevado.")
+              help="Proporción de niños con anemia que la red clasifica en riesgo moderado o alto.")
     m2.metric("Especificidad", pct(metricas["especificidad"]),
-              help="Proporción de niños sin anemia que la red clasifica en riesgo menor.")
+              help="Proporción de niños sin anemia que la red clasifica en riesgo bajo.")
     m3.metric("Valor predictivo negativo", pct(metricas["VPN"]),
-              help="Proporción de niños clasificados en riesgo menor que no tenían anemia.")
+              help="Proporción de niños clasificados en riesgo bajo que no tenían anemia.")
     m4.metric("Área bajo la curva ROC", f"{metricas['AUC']:.3f}".replace(".", ","),
               help="Capacidad de distinguir entre niños con y sin anemia (0,5 = azar; 1 = perfecta).")
     st.markdown(
-        f"El umbral de decisión ({pct(UMBRAL)}) se fijó para detectar al menos al 70 % de los "
+        f"El umbral de tamizaje ({pct(UMBRAL)}) se fijó para detectar al menos al 70 % de los "
         "niños con anemia, porque en el tamizaje es preferible una falsa alarma a dejar sin "
-        "atención a un niño en riesgo. Como contrapartida, parte de los niños clasificados en "
-        "riesgo elevado no tendrá anemia.")
+        "atención a un niño en riesgo. A partir de él se recomienda priorizar la prueba de "
+        "hemoglobina. Los resultados se presentan en tres niveles:")
+    st.table({
+        "Nivel": ["Bajo", "Moderado", "Alto"],
+        "Probabilidad estimada": [f"Menor a {pct(UMBRAL)}", f"{pct(UMBRAL)} a {pct(UMBRAL_ALTO)}",
+                                  f"{pct(UMBRAL_ALTO)} o más"],
+        "Niños con anemia por cada 100 (ENDES 2025)": [ANEMIA_POR_NIVEL[n] for n in
+                                                      ("Bajo", "Moderado", "Alto")],
+    })
+    st.caption("El límite del nivel alto (45 %) se fijó con los datos de entrenamiento: por encima "
+               "de él, más de la mitad de los niños tenía anemia en la validación cruzada de 2024.")
 
     st.subheader("Limitaciones")
     st.markdown(
