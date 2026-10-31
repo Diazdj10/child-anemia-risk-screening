@@ -1,76 +1,96 @@
 # Tamizaje de riesgo de anemia infantil
 
-Aplicación web que estima el riesgo de anemia en niños de 6 a 35 meses en el Perú mediante una
-red bayesiana entrenada con la ENDES 2024 del INEI (criterio de anemia OMS 2024).
+Aplicación web que estima el riesgo de anemia en niños y niñas de 6 a 35 meses en el Perú
+mediante una **red bayesiana** entrenada con la Encuesta Demográfica y de Salud Familiar
+(ENDES) 2024 del INEI, según el criterio de anemia de la OMS 2024.
 
-Proyecto del curso Sistemas Basados en el Conocimiento, Escuela de Informática,
-Universidad Nacional de Trujillo, 2026. Autores: Charcape Rodríguez Joaquín,
-Díaz Zegarra Diego Jhonatan y Jara Solorzano Dylan Nikolas.
+> La herramienta **no diagnostica** la anemia ni reemplaza la medición de hemoglobina. Su
+> propósito es ayudar a priorizar a los niños que requieren con mayor urgencia la prueba de
+> hemoglobina y la atención.
 
-> La herramienta no diagnostica la anemia ni reemplaza la medición de hemoglobina.
+Proyecto del curso **Sistemas Basados en el Conocimiento**, Escuela de Informática,
+Universidad Nacional de Trujillo, 2026.
 
-## Contenido
+**Autores:** Charcape Rodríguez Joaquín, Díaz Zegarra Diego Jhonatan y Jara Solorzano Dylan Nikolas.
+
+## Problema
+
+La anemia infantil es un problema de salud pública en el Perú. Detectarla exige medir la
+hemoglobina, y no siempre es posible hacerlo a todos los niños con la misma urgencia. Este
+proyecto propone un sistema de tamizaje que, con datos sencillos de preguntar, estima la
+probabilidad de anemia y señala a quiénes conviene priorizar.
+
+## Cómo funciona
+
+1. La persona usuaria responde hasta 10 preguntas sobre el niño, la madre y el hogar. Cualquier
+   dato puede quedar como *No se conoce*: la red estima el riesgo con la información disponible.
+2. La red bayesiana calcula la probabilidad de anemia mediante inferencia exacta
+   (eliminación de variables).
+3. La aplicación compara esa probabilidad con un umbral y clasifica el caso como **riesgo
+   elevado** o **riesgo menor**.
+4. Se muestra qué datos elevan o reducen el riesgo, para que el resultado sea explicable.
+
+### Factores considerados
+
+| Grupo | Variables |
+|---|---|
+| Niño o niña | edad, sexo, lactancia materna, diarrea reciente, desnutrición crónica |
+| Madre | anemia de la madre, nivel educativo |
+| Hogar | nivel socioeconómico (quintil de riqueza), región natural, desagüe de red pública |
+
+## Modelo y resultados
+
+- **Datos de entrenamiento:** 9 706 niños de la ENDES 2024.
+- **Datos de prueba:** 9 061 niños de la ENDES 2025, no usados en el entrenamiento.
+- **Umbral de decisión:** 33,2 %, fijado para detectar al menos al 70 % de los niños con anemia,
+  porque en un tamizaje es preferible una falsa alarma a dejar sin atención a un niño en riesgo.
+
+| Métrica | Valor |
+|---|---|
+| Sensibilidad | 70,1 % |
+| Especificidad | 51,1 % |
+| Valor predictivo negativo | 75,1 % |
+| Área bajo la curva ROC | 0,653 |
+
+### Limitaciones
+
+- La red muestra asociaciones probabilísticas, no relaciones causales demostradas.
+- Su capacidad de clasificación es moderada, por lo que no sustituye la medición de hemoglobina.
+- Parte de los niños clasificados en riesgo elevado no tendrá anemia (consecuencia del umbral
+  elegido).
+- Se entrenó con una encuesta nacional; su desempeño puede variar en poblaciones específicas.
+
+## Estructura del proyecto
 
 | Archivo | Descripción |
 |---|---|
 | `app.py` | Interfaz de la aplicación (Streamlit) |
 | `inferencia.py` | Carga de la red bayesiana y cálculo del riesgo |
 | `modelo/red_experta.json` | Red bayesiana entrenada: estructura, tablas de probabilidad y umbral |
-| `.streamlit/config.toml` | Colores y tipografía de la aplicación |
+| `.streamlit/config.toml` | Colores y tipografía |
 | `requirements.txt` | Librerías necesarias |
 
-## 1. Probar la aplicación en tu computadora (VS Code)
+El modelo no contiene microdatos de la ENDES, solo las tablas de probabilidad estimadas.
 
-1. Abre la carpeta en VS Code (**Archivo > Abrir carpeta**).
-2. Abre una terminal (**Terminal > Nueva terminal**) y crea un entorno virtual:
-   ```
-   python -m venv .venv
-   ```
-   Actívalo: en Windows, `.venv\Scripts\activate`; en macOS o Linux, `source .venv/bin/activate`.
-3. Instala las librerías:
-   ```
-   pip install -r requirements.txt
-   ```
-4. Ejecuta la aplicación:
-   ```
-   streamlit run app.py
-   ```
-   Se abrirá en el navegador, en `http://localhost:8501`. Para detenerla, presiona `Ctrl + C`
-   en la terminal.
+## Ejecución local
 
-Se requiere Python 3.11 o superior.
+Requiere Python 3.11 o superior.
 
-## 2. Subir el proyecto a GitHub (desde VS Code)
+```
+python -m venv .venv
+.venv\Scripts\activate        # macOS o Linux: source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-1. En la barra lateral, abre **Control de código fuente** (ícono de ramas) y pulsa
-   **Inicializar repositorio**.
-2. Escribe un mensaje (por ejemplo, "Primera versión de la aplicación") y pulsa **Confirmar**
-   (*Commit*). Si VS Code pregunta si deseas preparar todos los cambios, acepta.
-3. Pulsa **Publicar rama** (*Publish Branch*), inicia sesión con tu cuenta de GitHub si te lo
-   pide y elige **repositorio público**.
+La aplicación se abre en `http://localhost:8501`.
 
-## 3. Publicar en Streamlit Community Cloud
+## Tecnologías
 
-1. Entra a <https://share.streamlit.io> e inicia sesión con tu cuenta de GitHub.
-2. Pulsa **Create app** y elige desplegar desde un repositorio de GitHub.
-3. Selecciona el repositorio, la rama `main` y el archivo `app.py`.
-4. En **Advanced settings**, elige Python 3.12.
-5. Pulsa **Deploy**. En unos minutos tendrás un enlace público.
+Python, [pgmpy](https://pgmpy.org/) (redes bayesianas) y [Streamlit](https://streamlit.io/)
+(interfaz web).
 
-Cada vez que confirmes y sincronices cambios desde VS Code, la aplicación se actualizará sola.
-Si nadie la visita durante 12 horas entra en reposo; al abrirla, basta con pulsar el botón para
-reactivarla. Conviene abrirla unos minutos antes de una presentación.
+## Fuente de datos
 
-## 4. Personalizar el diseño
-
-- **Textos, preguntas y distribución:** en `app.py`.
-- **Colores y fuente:** en `.streamlit/config.toml`; cada línea está comentada.
-- **Nombres de las preguntas y opciones:** en el diccionario `FACTORES` de `inferencia.py`.
-  No cambies las claves internas (por ejemplo, `"Q1 Más pobre"`), porque son los estados del modelo;
-  solo cambia el texto que ve el usuario.
-
-## Actualizar el modelo
-
-El archivo `modelo/red_experta.json` se genera con el proyecto de análisis
-(`python src/exportar_modelo.py <carpeta_de_la_app>`) después de entrenar la red. No contiene
-microdatos de la ENDES, solo las tablas de probabilidad estimadas.
+Instituto Nacional de Estadística e Informática (INEI), Encuesta Demográfica y de Salud
+Familiar (ENDES) 2024 y 2025.
