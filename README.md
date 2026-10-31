@@ -5,6 +5,8 @@ mediante una **red bayesiana** construida con datos de la Encuesta Demográfica 
 Familiar (ENDES) 2024 y 2025 del INEI (entrenamiento con 2024 y validación con 2025), según el
 criterio de anemia de la OMS 2024.
 
+**Aplicación en línea:** <https://child-anemia-risk-screening-fotbufkzhpwilapp6vnnnhz.streamlit.app/>
+
 > La herramienta **no diagnostica** la anemia ni reemplaza la medición de hemoglobina. Su
 > propósito es ayudar a priorizar a los niños que requieren con mayor urgencia la prueba de
 > hemoglobina y la atención.
